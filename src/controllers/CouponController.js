@@ -4,11 +4,11 @@ const Coupon = require('../models/codediscount');
 
 let create = async (req, res, next) => {
     let code = req.body.code;
-    if (code === undefined) return res.status(400).send('Trường code không tồn tại');
+    if (code === undefined) return res.status(400).send('The code field does not exist.');
     let status = req.body.status;
-    if (status === undefined) return res.status(400).send('Trường status không tồn tại');
+    if (status === undefined) return res.status(400).send(' status not exists');
     let money = parseInt(req.body.money);
-    if (money === undefined) return res.status(400).send('Trường money không tồn tại');
+    if (money === undefined) return res.status(400).send(' money not exists');
     try {
         let newProduct = await Coupon.create({ code, status, money });
         return res.send(newProduct);
@@ -28,7 +28,7 @@ let listAdminSide = async (req, res, next) => {
 
 let listCustomer = async (req, res, next) => {
     let whereClause = {};
-    whereClause.status = 0;
+    whereClause.status = 1;
     let listCoupon = await Coupon.findAll({
         attributes: ['id','code', 'money', 'status', 'created_at'],
         order: [['created_at', 'DESC']],
@@ -40,70 +40,70 @@ let listCustomer = async (req, res, next) => {
 let onStatus = async (req, res, next) => {
     try {
         let id = req.body.id;
-        if (id === undefined) return res.status(400).send('Trường id không tồn tại');
+        if (id === undefined) return res.status(400).send(' id not exists');
         await Coupon.update(
             { status: 1 },
             { where: { id: id } }
         )
-        return res.send({ message: 'Disable coupon thành công!' })
+        return res.send({ message: 'Disable coupon success!' })
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
 let offStatus = async (req, res, next) => {
     try {
         let id = req.body.id;
-        if (id === undefined) return res.status(400).send('Trường id không tồn tại');
+        if (id === undefined) return res.status(400).send(' id not exists');
         await Coupon.update(
             { status: 0 },
             { where: { id: id } }
         )
-        return res.send({ message: 'Kích hoạt coupon thành công!' })
+        return res.send({ message: 'Active coupon success!' })
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
 
 let deleteCoupon = async (req, res, next) => {
     let id = req.body.id;
-    if (id === undefined) return res.status(400).send('Trường id không tồn tại');
+    if (id === undefined) return res.status(400).send(' id not exists');
     try {
         await Coupon.destroy(
             { where: { id: id } }
         )
-        return res.send({ message: 'Xóa biến thể sản phẩm thành công' })
+        return res.send({ message: 'Delete Product Variant success' })
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
 let update = async (req, res, next) => {
         let id = parseInt(req.body.id);
-        if (id === undefined) return res.status(400).send('Trường id không tồn tại');
+        if (id === undefined) return res.status(400).send(' id not exists');
         let money = parseInt(req.body.money);
-        if (money === undefined) return res.status(400).send('Trường money không tồn tại');
+        if (money === undefined) return res.status(400).send(' money not exists');
         let code = req.body.code;
-        if (code === undefined) return res.status(400).send('Trường code không tồn tại');
+        if (code === undefined) return res.status(400).send(' code not exists');
         try {
             await Coupon.update(
                 { money: money, code: code },
                 { where: { id: id } }
             )
-            return res.send({ message: 'Update thành công!' })
+            return res.send({ message: 'Update success!' })
         } catch (err) {
             console.log(err)
-            return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+            return res.status(500).send('Error');
         }
 }
 
 let detailAdminSide = async (req, res, next) => {
     let id = req.params.id;
-    if (id === undefined) return res.status(400).send('Trường id không tồn tại');
+    if (id === undefined) return res.status(400).send(' id not exists');
 
     try {
         let couponDetail = await Coupon.findOne({
@@ -113,11 +113,11 @@ let detailAdminSide = async (req, res, next) => {
         if (couponDetail) {
             return res.send(couponDetail);
         } else {
-            return res.status(400).send('Mã giảm giá này không tồn tại');
+            return res.status(400).send('Counpo not exists');
         }
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 

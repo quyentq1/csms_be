@@ -13,16 +13,16 @@ const crypto = require('crypto');
 
 let register = async (req, res, next) => {
     let email = req.body.email;
-    if (email === undefined) return res.status(400).send({ message: 'Vui lòng nhập Email của bạn' });
+    if (email === undefined) return res.status(400).send({ message: 'Please enter your Email' });
     let password = req.body.password;
-    if (password === undefined) return res.status(400).send({ message: 'Vui lòng nhập Mật khẩu của bạn' });
+    if (password === undefined) return res.status(400).send({ message: 'Please enter your Password' });
     let customer_name = req.body.customer_name;
-    if (customer_name === undefined) return res.status(400).send({ message: 'Vui lòng nhập Họ và Tên của bạn' });
+    if (customer_name === undefined) return res.status(400).send({ message: 'Please enter your FullName' });
     let phone_number = req.body.phone_number;
-    if (phone_number === undefined) return res.status(400).send({ message: 'Vui lòng nhập Số điện thoại của bạn' });
+    if (phone_number === undefined) return res.status(400).send({ message: 'Please enter your Phone' });
 
     let customer = await User.findOne({ where: { email, role_id: 2 } });
-    if (customer) return res.status(409).send({ message: 'Email đã tồn tại' });
+    if (customer) return res.status(409).send({ message: 'Email exists' });
     else {
         try {
             let hashPassword = bcrypt.hashSync(password, 10);
@@ -55,28 +55,28 @@ let register = async (req, res, next) => {
             });
         } catch (err) {
             console.log(err);
-            return res.status(500).send({ message: 'Có lỗi xảy ra vui lòng thử lại' });
+            return res.status(500).send({ message: 'An error occurred please try again' });
         }
     }
 }
 
 let login = async (req, res, next) => {
     let email = req.body.email;
-    if (email === undefined) return res.status(400).send({ message: 'Email hoặc Mật khẩu không đúng' });
+    if (email === undefined) return res.status(400).send({ message: 'Incorrect Email or Password' });
     let password = req.body.password;
-    if (password === undefined) return res.status(400).send({ message: 'Email hoặc Mật khẩu không đúng' });
+    if (password === undefined) return res.status(400).send({ message: 'Incorrect Email or Password' });
 
     try {
         let customer = await User.findOne({
             where: { email, role_id: 2 },
         });
         if (!customer) {
-            return res.status(401).send({ message: 'Email hoặc Mật khẩu không đúng' });
+            return res.status(401).send({ message: 'Incorrect Email or Password' });
         }
 
         let isPasswordValid = bcrypt.compareSync(password, customer.password);
         if (!isPasswordValid) {
-            return res.status(401).send({ message: 'Email hoặc Mật khẩu không đúng' });
+            return res.status(401).send({ message: 'Incorrect Email or Password' });
         }
 
         const accessToken = jwt.sign(
@@ -105,18 +105,18 @@ let login = async (req, res, next) => {
         });
     } catch (err) {
         console.log(err);
-        return res.status(400).send({ message: 'Có lỗi xảy ra, vui lòng thử lại' });
+        return res.status(400).send({ message: 'An error occurred, please try again.' });
     }
 }
 
 let logout = async (req, res, next) => {
     res.clearCookie('refresh_token');
-    return res.send({ message: 'Đăng xuất thành công' });
+    return res.send({ message: 'Logout successful' });
 }
 
 let refreshAccessToken = async (req, res, next) => {
     const refreshToken = req.cookies?.refresh_token;
-    if (refreshToken === undefined) return res.status(400).send({ message: 'Refresh Token không hợp lệ' });
+    if (refreshToken === undefined) return res.status(400).send({ message: 'Refresh Token is invalid' });
     try {
         const { iat, exp, ...payload } = jwt.verify(refreshToken, process.env.REFRESHTOKEN_SECRET_KEY);
 
@@ -146,13 +146,13 @@ let refreshAccessToken = async (req, res, next) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(400).send({ message: 'Refresh Token không hợp lệ' });
+        return res.status(400).send({ message: 'Refresh Token is invalid' });
     }
 }
 
 let getInfor = async (req, res, next) => {
     const customerId = req.token.customer_id;
-    if (!customerId) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!customerId) return res.status(400).send({ message: 'Access Token invalid' });
 
     try {
         const customer = await User.findOne({
@@ -171,23 +171,23 @@ let getInfor = async (req, res, next) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ message: 'Có lỗi xảy ra, vui lòng thử lại' });
+        return res.status(500).send({ message: 'Error' });
     }
 }
 
 let update = async (req, res, next) => {
     const user_id = req.token.customer_id;
-    if (!user_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!user_id) return res.status(400).send({ message: 'Invalid Access Token' });
     const customer_name = req.body.customer_name;
-    if (customer_name === undefined) return res.status(400).send({ message: 'Trường customer_name không tồn tại' });
+    if (customer_name === undefined) return res.status(400).send({ message: ' customer_name Not Exists' });
     const phone_number = req.body.phone_number;
-    if (phone_number === undefined) return res.status(400).send({ message: 'Trường phone_number không tồn tại' });
+    if (phone_number === undefined) return res.status(400).send({ message: ' phone_number Not Exists' });
     const address = req.body.address;
-    if (address === undefined) return res.status(400).send({ message: 'Trường address không tồn tại' });
+    if (address === undefined) return res.status(400).send({ message: ' address Not Exists' });
 
     try {
         const customer = await User.findOne({ where: { user_id, role_id: 2 } });
-        if (!customer) return res.status(409).send({ message: 'Customer không tồn tại' });
+        if (!customer) return res.status(409).send({ message: 'Customer Not Exists' });
 
         const numberUpdate = await Customer_Info.update(
             { customer_name, phone_number, address },
@@ -200,18 +200,18 @@ let update = async (req, res, next) => {
                 address
             });
         } else {
-            return res.status(500).send({ message: 'Có lỗi xảy ra, vui lòng thử lại' });
+            return res.status(500).send({ message: 'Error' });
         }
     } catch (err) {
         console.log(err);
-        return res.status(500).send({ message: 'Có lỗi xảy ra, vui lòng thử lại' });
+        return res.status(500).send({ message: 'Error' });
     }
 }
 
 const googleLogin = async (req, res, next) => {
     const { email, password, username, phone } = req.body;
     try {
-        // Kiểm tra xem email đã tồn tại trong database chưa
+        // Kiểm tra xem email exists trong database chưa
         let customer = await User.findOne({ where: { email, role_id: 2 } });
 
         if (!customer) {
@@ -253,7 +253,7 @@ const googleLogin = async (req, res, next) => {
 
     } catch (err) {
         console.error("Error logging in with Google:", err);
-        return res.status(500).send({ message: 'Có lỗi xảy ra, vui lòng thử lại' });
+        return res.status(500).send({ message: 'Error' });
     }
 };
 
@@ -283,7 +283,7 @@ const forgotPassword = async (req, res, next) => {
 
     try {
         let user = await User.findOne({ where: { email, role_id: 2 } });
-        if (!user) return res.status(404).json({ message: 'Email không tồn tại' });
+        if (!user) return res.status(404).json({ message: 'Email Not Exists' });
 
         // Tạo OTP ngẫu nhiên (gồm 6 chữ số)
         const otp = crypto.randomInt(100000, 999999).toString();
@@ -303,16 +303,16 @@ const forgotPassword = async (req, res, next) => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: 'OTP Quên Mật Khẩu',
-            text: `Mã OTP của bạn là: ${otp}. Mã này sẽ hết hạn trong 5 phút.`
+            subject: 'OTP Forgot Password',
+            text: `Your OTP code is: ${otp}. This code will expire in 5 minutes.`
         };
 
         await transporter.sendMail(mailOptions);
 
-        return res.status(200).json({ message: 'OTP đã được gửi tới email của bạn' });
+        return res.status(200).json({ message: 'OTP has been sent to your email' });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau' });
+        return res.status(500).json({ message: 'Error' });
     }
 };
 
@@ -321,12 +321,12 @@ const verifyOtpController = async (req, res, next) => {
 
     try {
         const isValid = verifyOtp(email, otp);
-        if (!isValid) return res.status(400).json({ message: 'OTP không hợp lệ hoặc đã hết hạn' });
+        if (!isValid) return res.status(400).json({ message: 'OTP is invalid or expired' });
 
-        return res.status(200).json({ message: 'OTP xác thực thành công' });
+        return res.status(200).json({ message: 'OTP authentication successful' });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau' });
+        return res.status(500).json({ message: 'Error' });
     }
 };
 
@@ -335,13 +335,13 @@ const resetPassword = async (req, res, next) => {
 
     // Kiểm tra đầu vào
     if (!newPassword || newPassword.length < 6) {
-        return res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+        return res.status(400).json({ message: 'New password must be at least 6 characters' });
     }
 
     try {
         // Tìm user trong DB
         const user = await User.findOne({ where: { email } });
-        if (!user) return res.status(404).json({ message: 'Email không tồn tại' });
+        if (!user) return res.status(404).json({ message: 'Email Not Exists' });
 
         // Mã hóa mật khẩu mới
         const hashPassword = bcrypt.hashSync(newPassword, 10);
@@ -350,10 +350,10 @@ const resetPassword = async (req, res, next) => {
         user.password = hashPassword;
         await user.save();
 
-        return res.status(200).json({ message: 'Đổi mật khẩu thành công' });
+        return res.status(200).json({ message: 'Password changed successfully' });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau' });
+        return res.status(500).json({ message: 'Error' });
     }
 };
 let totalUser = async (req, res, next) => {
@@ -367,7 +367,7 @@ let totalUser = async (req, res, next) => {
         return res.send({ totalUser: totalUserCount });
     } catch (error) {
         console.error('Error calculating total users:', error);
-        return res.status(500).send({ error: 'Có lỗi xảy ra khi tính tổng số người dùng.' });
+        return res.status(500).send({ error: 'An error occurred while calculating the total number of users..' });
     }
 };
 module.exports = {

@@ -3,36 +3,36 @@ const Category = require('../models/category');
 let createLevel1 = async (req, res, next) => {
     try {
         let title = req.body.title;
-        if (title === undefined) return res.status(400).send('Trường title không tồn tại');
+        if (title === undefined) return res.status(400).send(' title not exists');
         let category = await Category.findOne({ where: { title } });
-        if (category) return res.status(409).send('Tên danh mục đã tồn tại');
+        if (category) return res.status(409).send('Category exists');
         else {
             let newCategory = await Category.create({ title });
             return res.send(newCategory);
         }
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
 let createLevel2 = async (req, res, next) => {
     try {
         let title = req.body.title;
-        if (title === undefined) return res.status(400).send('Trường title không tồn tại');
+        if (title === undefined) return res.status(400).send(' title not exists');
         let parent_id = req.body.parent_id;
-        if (parent_id === undefined) return res.status(400).send('Trường parent_id không tồn tại');
+        if (parent_id === undefined) return res.status(400).send(' parent_id not exists');
         let parentCategory = await Category.findOne({ where: { category_id: parent_id } });
-        if (!parentCategory) return res.status(400).send('parent_id đã nhập không tồn tại');
+        if (!parentCategory) return res.status(400).send('parent_id not exists');
         let category = await Category.findOne({ where: { title: title, level: 2 } });
-        if (category) return res.status(409).send('Tên danh mục đã tồn tại');
+        if (category) return res.status(409).send('Category exists');
         else {
             let newCategory = await Category.create({ title, level: 2, parent_id });
             return res.send(newCategory);
         }
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
@@ -58,7 +58,7 @@ let nestList = async (req, res, next) => {
         res.send(listCategory);
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 };
 
@@ -90,7 +90,7 @@ let list = async (req, res, next) => {
         return res.send(categoryList)
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
@@ -104,36 +104,36 @@ let listLevel1 = async (req, res, next) => {
         return res.send(categories);
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 let onState = async (req, res, next) => {
     try {
         let category_ids = req.body.category_ids;
-        if (category_ids === undefined) return res.status(400).send('Trường category_id không tồn tại');
+        if (category_ids === undefined) return res.status(400).send(' category_id not exists');
         await Category.update(
             { state: true },
             { where: { category_id: category_ids } }
         )
-        return res.send({ message: 'Mở bán biến thể sản phẩm thành công!' })
+        return res.send({ message: 'Successful product variant launch!' })
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
 let offState = async (req, res, next) => {
     try {
         let category_ids = req.body.category_ids;
-        if (category_ids === undefined) return res.status(400).send('Trường category_id không tồn tại');
+        if (category_ids === undefined) return res.status(400).send(' category_id not exists');
         Category.update(
             { state: false },
             { where: { category_id: category_ids } }
         )
-        return res.send({ message: 'Tắt biến thể sản phẩm thành công!' })
+        return res.send({ message: 'Product variation disabled successfully!' })
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 

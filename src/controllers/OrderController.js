@@ -14,26 +14,26 @@ const Customer_Info = require('../models/customer_info');
 
 let create = async (req, res, next) => {
     let user_id = req.token.customer_id;
-    if (!user_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!user_id) return res.status(400).send({ message: 'Invalid Access Token' });
     try {
         let user = await User.findOne({ where: { user_id, role_id: 2 } });
-        if (user == null) return res.status(400).send('User này không tồn tại');
+        if (user == null) return res.status(400).send('User này not exists');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
     let customer_name = req.body.customer_name;
-    if (customer_name === undefined) return res.status(400).send('Trường customer_name không tồn tại');
+    if (customer_name === undefined) return res.status(400).send(' customer_name not exists');
     let email = req.body.email;
-    if (email === undefined) return res.status(400).send('Trường email không tồn tại');
+    if (email === undefined) return res.status(400).send(' email not exists');
     let phone_number = req.body.phone_number;
-    if (phone_number === undefined) return res.status(400).send('Trường phone_number không tồn tại');
+    if (phone_number === undefined) return res.status(400).send(' phone_number not exists');
     let address = req.body.address;
-    if (address === undefined) return res.status(400).send('Trường address không tồn tại');
+    if (address === undefined) return res.status(400).send(' address not exists');
     let order_items = req.body.order_items;
-    if (order_items === undefined) return res.status(400).send('Trường order_items không tồn tại');
+    if (order_items === undefined) return res.status(400).send(' order_items not exists');
     let payment_method = req.body.payment_method;
-    if (payment_method === undefined) return res.status(400).send('Trường paymentMethod không tồn tại');
+    if (payment_method === undefined) return res.status(400).send(' paymentMethod not exists');
     let statusPayment = req.body.statusPayment; // Thông tin đã thanh toán hay chưa Process, Done
     if (statusPayment === undefined) statusPayment == 'Process'
     let shipping = req.body.shipping;
@@ -71,11 +71,11 @@ let create = async (req, res, next) => {
                 where: { product_variant_id: order_item.product_variant_id }
             });
             if (product_variant == null)
-                return res.status(400).send("Sản phẩm này không tồn tại");
+                return res.status(400).send("Product not exists");
             if (product_variant.state != true)
-                return res.status(400).send("Sản phẩm này chưa được mở bán");
+                return res.status(400).send("This product is not yet available for sale.");
             if (order_item.quantity > product_variant.quantity)
-                return res.status(400).send("Số lượng sản phẩm không hợp lệ");
+                return res.status(400).send("Invalid product quantity");
             let productVariantPrice = product_variant.Product.Product_Price_Histories[0].price;
             let total_value = productVariantPrice * order_item.quantity;
             let newOrderItem = {
@@ -98,12 +98,12 @@ let create = async (req, res, next) => {
         if(statusPayment == 'Process'){
             Notification.create({
                 user_id,
-                content: 'Đặt hàng thành công đơn hàng #'+order_id
+                content: 'Order successfully placed #'+order_id
             });
         }else{
             Notification.create({
                 user_id,
-                content: 'Đã thanh toán thành công đơn hàng #'+order_id
+                content: 'Order paid successfully #'+order_id
             });
             const customer = await Customer_Info.findOne({ where: { user_id } });
             if (customer){
@@ -118,7 +118,7 @@ let create = async (req, res, next) => {
         return res.send(newOrder)
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
@@ -152,21 +152,21 @@ let listAdminSide = async (req, res, next) => {
         return res.send(orderList);
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
 
     }
 }
 
 let listCustomerSide = async (req, res, next) => {
     let customer_id = req.token.customer_id;
-    if (!customer_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!customer_id) return res.status(400).send({ message: 'Invalid Access Token' });
 
     try {
         let customer = await User.findOne({ where: { user_id: customer_id, role_id: 2 } });
-        if (customer == null) return res.status(400).send('User này không tồn tại');
+        if (customer == null) return res.status(400).send('User not exists');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 
     try {
@@ -234,21 +234,21 @@ let listCustomerSide = async (req, res, next) => {
         return res.send(orderList);
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
         
     }
 }
 
 let listNotification = async (req, res, next) => {
     let customer_id = req.token.customer_id;
-    if (!customer_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!customer_id) return res.status(400).send({ message: 'Invalid Access Token' });
 
     try {
         let customer = await User.findOne({ where: { user_id: customer_id, role_id: 2 } });
-        if (customer == null) return res.status(400).send('User này không tồn tại');
+        if (customer == null) return res.status(400).send('User này not exists');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
     try {
         let notificationList = await Notification.findAll({
@@ -261,20 +261,20 @@ let listNotification = async (req, res, next) => {
         return res.send(notificationList);
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
         
     }
 }
 let listNotificationAll = async (req, res, next) => {
     let customer_id = req.token.customer_id;
-    if (!customer_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!customer_id) return res.status(400).send({ message: 'Invalid Access Token' });
 
     try {
         let customer = await User.findOne({ where: { user_id: customer_id, role_id: 2 } });
-        if (customer == null) return res.status(400).send('User này không tồn tại');
+        if (customer == null) return res.status(400).send('User not exists');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
     try {
         let notificationList = await Notification.findAll({
@@ -287,13 +287,13 @@ let listNotificationAll = async (req, res, next) => {
         return res.send(notificationList);
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
         
     }
 }
 let changeStatusNotification = async (req, res, next) => {
     let id = req.params.id;
-    if (id === undefined) return res.status(400).send('Trường id không tồn tại');
+    if (id === undefined) return res.status(400).send(' id not exists');
     try {
         notifi = await Notification.findOne({ where: { id } });
         if(notifi){
@@ -301,38 +301,38 @@ let changeStatusNotification = async (req, res, next) => {
                 { status: 1 },
                 { where: { id: id } }
             )
-            return res.send({ message: 'Update thành công!' })
+            return res.send({ message: 'Update Success!' })
         }else{
-            return res.status(400).send('Notification này không tồn tại');
+            return res.status(400).send('Notification này not exists');
         }
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 }
 
 
 let detailCustomerSide = async (req, res, next) => {
     let customer_id = req.token.customer_id;
-    if (!customer_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
+    if (!customer_id) return res.status(400).send({ message: 'Invalid Access Token' });
 
     try {
         let customer = await User.findOne({ where: { user_id: customer_id, role_id: 2 } });
-        if (customer == null) return res.status(400).send('User này không tồn tại');
+        if (customer == null) return res.status(400).send('User này not exists');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
     }
 
     let order_id = req.params.order_id;
-    if (order_id === undefined) return res.status(400).send('Trường order_id không tồn tại');
+    if (order_id === undefined) return res.status(400).send(' order_id not exists');
     let order;
     try {
         order = await Order.findOne({ where: { order_id, user_id: customer_id } });
-        if (order == null) return res.status(400).send('Order này không tồn tại');
+        if (order == null) return res.status(400).send('Order này not exists');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
     }
 
     let stateList = await order.getOrder_States()
@@ -378,39 +378,28 @@ let detailCustomerSide = async (req, res, next) => {
 
 
 let checkDiscount = async (req, res, next) => {
-    // let customer_id = req.token.customer_id;
-    // if (!customer_id) return res.status(400).send({ message: 'Access Token không hợp lệ' });
-
-    // try {
-    //     let customer = await User.findOne({ where: { user_id: customer_id, role_id: 2 } });
-    //     if (customer == null) return res.status(400).send('User này không tồn tại');
-    // } catch (err) {
-    //     console.log(err);
-    //     return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
-    // }
-
     let code = req.params.code;
-    if (code === undefined) return res.status(200).send({ status: 0, message: 'Trường code không tồn tại' });
+    if (code === undefined) return res.status(200).send({ status: 0, message: ' code not exists' });
     let discount;
     try {
         discount = await Codediscount.findOne({ where: { code, status: 0 } });
-        if (discount == null) return res.status(200).send({ status: 0, message: 'Mã giảm giá này không tồn tại' });
+        if (discount == null) return res.status(200).send({ status: 0, message: 'Mã giảm giá này not exists' });
         discount.update({ status: 1 });
         return res.status(200).send({ status: 1, money:discount.money, message: 'Áp mã thành công' });
     } catch (err) {
         console.log(err);
-        return res.status(400).send('Mã giảm giá không tồn tại');
+        return res.status(400).send('Mã giảm giá not exists');
     }
 }
 
 
 let detailAdminSide = async (req, res, next) => {
     let order_id = req.params.order_id;
-    if (order_id === undefined) return res.status(400).send('Trường order_id không tồn tại');
+    if (order_id === undefined) return res.status(400).send(' order_id not exists');
 
     try {
         let order = await Order.findOne({ where: { order_id } });
-        if (order == null) return res.status(400).send('Order này không tồn tại');
+        if (order == null) return res.status(400).send('Order này not exists');
 
         let stateList = await order.getOrder_States()
         let orderHistories = stateList.map((state) => {
@@ -460,22 +449,22 @@ let detailAdminSide = async (req, res, next) => {
         return res.send(orderConverted);
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
     }
 }
 
 let changeStatus = async (req, res, next) => {
     let order_id = req.params.order_id;
-    if (order_id === undefined) return res.status(400).send('Trường order_id không tồn tại');
+    if (order_id === undefined) return res.status(400).send(' order_id not exist');
     let state_id = req.params.state_id;
-    if (state_id === undefined) return res.status(400).send('Trường state_id không tồn tại');
+    if (state_id === undefined) return res.status(400).send(' state_id not exist');
     let order;
     try {
         order = await Order.findOne({ where: { order_id } });
-        if (order == null) return res.status(400).send('Order này không tồn tại');
+        if (order == null) return res.status(400).send('Order not exist');
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tạo đơn hàng vui lòng thử lại');
+        return res.status(500).send('Error');
     }
 
     try {
@@ -490,7 +479,7 @@ let changeStatus = async (req, res, next) => {
                 // Update thông báo
                 Notification.create({
                     user_id: order.user_id,
-                    content: 'Đã xác nhận thanh tóan đơn hàng #'+order_id
+                    content: 'Order payment confirmed #'+order_id
                 });
                 const customer = await Customer_Info.findOne({ where: { user_id: order.user_id } });
                 if (customer){
@@ -502,7 +491,7 @@ let changeStatus = async (req, res, next) => {
                     )
                 }
                 return res.send(newState);
-            } else return res.send("Đơn hàng không hợp lệ");
+            } else return res.send("Invalid order");
         }
 
         // Xử lý chuyển đơn hàng sang trạng thái "Đang vận chuyển"
@@ -516,10 +505,10 @@ let changeStatus = async (req, res, next) => {
                 // Update thông báo
                 Notification.create({
                     user_id: order.user_id,
-                    content: 'Đang vận chuyển đơn hàng #'+order_id
+                    content: 'Order is shipping #'+order_id
                 });
                 return res.send(newState);
-            } else return res.send("Đơn hàng không hợp lệ");
+            } else return res.send("Invalid order");
         }
 
         // Xử lý chuyển đơn hàng sang trạng thái "Đã giao"
@@ -541,10 +530,10 @@ let changeStatus = async (req, res, next) => {
                 // Update thông báo
                 Notification.create({
                     user_id: order.user_id,
-                    content: 'Giao hàng thành công đơn hàng #'+order_id
+                    content: 'Order delivered successfully #'+order_id
                 });
                 return res.send(newState);
-            } else return res.send("Đơn hàng không hợp lệ");
+            } else return res.send("Invalid order");
         }
 
         // Xử lý chuyển đơn hàng sang trạng thái "Đã hủy"
@@ -560,10 +549,10 @@ let changeStatus = async (req, res, next) => {
                 // Update thông báo
                 Notification.create({
                     user_id: order.user_id,
-                    content: 'Hủy đơn hàng #'+order_id
+                    content: 'Cancel order #'+order_id
                 });
                 return res.send(newState);
-            } else return res.send("Đơn hàng không hợp lệ");
+            } else return res.send("Invalid order");
         }
 
         // Xử lý chuyển đơn hàng sang trạng thái "Hủy bởi shop"
@@ -579,16 +568,16 @@ let changeStatus = async (req, res, next) => {
                 // Update thông báo
                 Notification.create({
                     user_id: order.user_id,
-                    content: 'Shop hủy đơn hàng #'+order_id
+                    content: 'Shop cancel order #'+order_id
                 });
                 return res.send(newState);
-            } else return res.send("Đơn hàng không hợp lệ");
+            } else return res.send("Invalid order");
         }
 
-        res.send("state_id không hợp lệ");
+        res.send("state_id invalid");
     } catch (err) {
         console.log(err);
-        return res.status(500).send('Gặp lỗi khi tải dữ liệu vui lòng thử lại');
+        return res.status(500).send('Error loading data please try again');
     }
 }
 let totalOrder = async (req, res, next) => {
@@ -603,7 +592,7 @@ let totalOrder = async (req, res, next) => {
         return res.send({ totalOrder: totalOrderCount });
     } catch (error) {
         console.error('Error calculating total orders:', error);
-        return res.status(500).send({ error: 'Có lỗi xảy ra khi tính tổng số đơn hàng.' });
+        return res.status(500).send({ error: 'An error occurred while calculating the order total..' });
     }
 };
 let totalPrice = async (req, res, next) => {
@@ -620,7 +609,7 @@ let totalPrice = async (req, res, next) => {
         return res.send({ totalPrice });
     } catch (error) {
         console.error('Error calculating total products:', error);
-        return res.status(500).send({ error: 'Có lỗi xảy ra khi tính tổng số sản phẩm.' });
+        return res.status(500).send({ error: 'An error occurred while calculating the products total..' });
     }
 };
 let totalOrderPerDay = async (req, res, next) => {
@@ -643,7 +632,7 @@ let totalOrderPerDay = async (req, res, next) => {
         return res.send({ totalOrdersPerDay });
     } catch (error) {
         console.error('Error calculating total orders per day:', error);
-        return res.status(500).send({ error: 'Có lỗi xảy ra khi tính tổng số đơn hàng theo từng ngày.' });
+        return res.status(500).send({ error: 'An error occurred while calculating the order total. theo từng ngày.' });
     }
 };
 let totalRevenuePerDay = async (req, res, next) => {
@@ -671,7 +660,7 @@ let totalRevenuePerDay = async (req, res, next) => {
         return res.send({ totalRevenuePerDay: revenuePerDay });
     } catch (error) {
         console.error('Error calculating total revenue per day:', error);
-        return res.status(500).send({ error: 'Có lỗi xảy ra khi tính tổng doanh thu theo từng ngày.' });
+        return res.status(500).send({ error: 'An error occurred while calculating total revenue by day..' });
     }
 };
 

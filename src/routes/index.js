@@ -11,6 +11,7 @@ const order = require('./order');
 const feedback = require('./feedback');
 const coupon = require('./coupon');
 const user = require('./user');
+const comments = require('./comments');
 
 function setRoute(server) {
 
@@ -29,6 +30,8 @@ function setRoute(server) {
     server.use('/api/product-variant', product_variantRouter);
 
     server.use('/api/order', order);
+    
+    server.use('/api/comments', comments);
 
     server.use('/api/feedback', feedback);
 
