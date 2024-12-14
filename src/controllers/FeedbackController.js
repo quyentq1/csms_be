@@ -56,7 +56,7 @@ const predictFeedback = async (req, res, next) => {
 
         if (response.data.status === 'successfuly' && response.data.data.length > 0) {
             // Update tất cả feedback với predict mới
-            const updatePromises = response.data.data.map(result => 
+            const updatePromises = response.data.data.map(result =>
                 Feedback.update(
                     { predict: result.predict },
                     { where: { feedback_id: result.id } }
@@ -93,7 +93,7 @@ const getFeedbacks = async (req, res, next) => {
         const startDate = req.body.startDate;
         const endDate = req.body.endDate;
         const predict = req.body.predict; // có thể là '0', '1' hoặc 'all'
-        
+
         const offset = (page - 1) * limit;
 
         // Định nghĩa điều kiện tìm kiếm theo predict
@@ -101,7 +101,7 @@ const getFeedbacks = async (req, res, next) => {
         if (predict === 0 || predict === 1) {
             predictCondition = { predict: predict };
         } else if (predict === null) {
-            predictCondition = {predict: null};
+            predictCondition = { predict: null };
         }
         // Nếu predict là 'all' hoặc undefined thì không thêm điều kiện
         console.log('predict:', predict); // kiểm tra giá trị của predict
@@ -109,8 +109,8 @@ const getFeedbacks = async (req, res, next) => {
 
         // Định nghĩa điều kiện tìm kiếm dựa vào searchBy
         let searchCondition;
-        switch(searchBy) {
-            case 'predict': 
+        switch (searchBy) {
+            case 'predict':
                 searchCondition = [
                     { predict: { [Op.like]: `${search}` } }
                 ];
