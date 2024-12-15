@@ -13,4 +13,9 @@ router.post('/create', jwtAuth, FeedbackController.create);
 
 router.put('/update', jwtAuth, FeedbackController.update);
 
+router.post('/getFeedback', FeedbackController.getFeedbacks);
+
+router.post('/predict', FeedbackController.predictFeedback);
+
+
 module.exports = router;

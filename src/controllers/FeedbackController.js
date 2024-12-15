@@ -14,6 +14,206 @@ const Feedback = require('../models/feedback');
 const Order_Status_Change_History = require('../models/order_status_change_history');
 const Colour = require('../models/colour');
 const Size = require('../models/size');
+const axios = require('axios');
+
+const predictFeedback = async (req, res, next) => {
+    try {
+        const feedbackArray = req.body;
+
+        // Validate input
+        if (!Array.isArray(feedbackArray)) {
+            return res.status(400).send('Dữ liệu gửi lên phải là một mảng');
+        }
+
+        // Validate từng item trong array
+        for (const item of feedbackArray) {
+            if (!item.content || !item.feedback_id) {
+                return res.status(400).send('Mỗi item phải có content và feedback_id');
+            }
+        }
+
+        // Kiểm tra tất cả feedback có tồn tại không
+        const feedbackIds = feedbackArray.map(item => item.feedback_id);
+        const existingFeedbacks = await Feedback.findAll({
+            where: {
+                feedback_id: feedbackIds
+            }
+        });
+
+        if (existingFeedbacks.length !== feedbackIds.length) {
+            return res.status(404).send('Một số feedback không tồn tại');
+        }
+
+        // Chuẩn bị data để gọi API dự đoán
+        const predictRequestBody = feedbackArray.map(item => ({
+            id: item.feedback_id,
+            comment: item.content,
+            predict: null
+        }));
+
+        // Gọi API dự đoán
+        const response = await axios.post('http://54.147.8.165:5000/api/v1/predict', predictRequestBody);
+
+        if (response.data.status === 'successfuly' && response.data.data.length > 0) {
+            // Update tất cả feedback với predict mới
+            const updatePromises = response.data.data.map(result =>
+                Feedback.update(
+                    { predict: result.predict },
+                    { where: { feedback_id: result.id } }
+                )
+            );
+
+            await Promise.all(updatePromises);
+
+            return res.json({
+                message: 'Cập nhật predict thành công',
+                data: response.data.data.map(result => ({
+                    feedback_id: result.id,
+                    content: feedbackArray.find(f => f.feedback_id === result.id)?.content,
+                    predict: result.predict
+                }))
+            });
+        } else {
+            return res.status(500).send('Không nhận được kết quả dự đoán hợp lệ');
+        }
+
+    } catch (err) {
+        console.log('Error in predictFeedback:', err);
+        return res.status(500).send('Gặp lỗi khi xử lý dự đoán feedback');
+    }
+};
+
+//Lấy feedback bằng search
+const getFeedbacks = async (req, res, next) => {
+    try {
+        const page = parseInt(req.body.page) || 1;
+        const limit = parseInt(req.body.limit) || 10;
+        const search = req.body.search || '';
+        const searchBy = req.body.searchBy || 'all';
+        const startDate = req.body.startDate;
+        const endDate = req.body.endDate;
+        const predict = req.body.predict; // có thể là '0', '1' hoặc 'all'
+
+        const offset = (page - 1) * limit;
+
+        // Định nghĩa điều kiện tìm kiếm theo predict
+        let predictCondition = {};
+        if (predict === 0 || predict === 1) {
+            predictCondition = { predict: predict };
+        } else if (predict === null) {
+            predictCondition = { predict: null };
+        }
+        // Nếu predict là 'all' hoặc undefined thì không thêm điều kiện
+        console.log('predict:', predict); // kiểm tra giá trị của predict
+        console.log('predictCondition:', predictCondition); // kiểm tra giá trị của predictCondition
+
+        // Định nghĩa điều kiện tìm kiếm dựa vào searchBy
+        let searchCondition;
+        switch (searchBy) {
+            case 'predict':
+                searchCondition = [
+                    { predict: { [Op.like]: `${search}` } }
+                ];
+                break;
+            case 'content':
+                searchCondition = [
+                    { content: { [Op.like]: `%${search}%` } }
+                ];
+                break;
+            case 'product':
+                searchCondition = [
+                    { '$product_variant.Product.product_name$': { [Op.like]: `%${search}%` } }
+                ];
+                break;
+            case 'email':
+                searchCondition = [
+                    { '$User.email$': { [Op.like]: `%${search}%` } }
+                ];
+                break;
+            default: // 'all'
+                searchCondition = [
+                    { predict: { [Op.like]: `${predict}` } },
+                    { content: { [Op.like]: `%${search}%` } },
+                    { '$product_variant.Product.product_name$': { [Op.like]: `%${search}%` } },
+                    { '$User.email$': { [Op.like]: `%${search}%` } }
+                ];
+        }
+
+        // Thêm điều kiện tìm kiếm theo ngày
+        let dateCondition = {};
+        if (startDate && endDate) {
+            dateCondition = {
+                created_at: {
+                    [Op.between]: [new Date(startDate), new Date(endDate)]
+                }
+            };
+        } else if (startDate) {
+            dateCondition = {
+                created_at: {
+                    [Op.gte]: new Date(startDate)
+                }
+            };
+        } else if (endDate) {
+            dateCondition = {
+                created_at: {
+                    [Op.lte]: new Date(endDate)
+                }
+            };
+        }
+
+        const feedbacks = await Feedback.findAndCountAll({
+            attributes: [
+                'feedback_id',
+                'content',
+                'predict',
+                'created_at'
+            ],
+            include: [
+                {
+                    model: Product_Variant,
+                    attributes: ['product_id'],
+                    as: 'product_variant',
+                    include: [{
+                        model: Product,
+                        attributes: ['product_name'],
+                        as: 'Product'
+                    }]
+                },
+                {
+                    model: User,
+                    attributes: ['email'],
+                    as: 'User'
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    { [Op.or]: searchCondition },
+                    predictCondition,
+                    dateCondition
+                ]
+            },
+            offset: offset,
+            limit: limit,
+            order: [['created_at', 'ASC']]
+        });
+
+        return res.json({
+            total: feedbacks.count,
+            page: page,
+            limit: limit,
+            total_pages: Math.ceil(feedbacks.count / limit),
+            searchBy: searchBy,
+            predict: predict,
+            startDate: startDate,
+            endDate: endDate,
+            data: feedbacks.rows
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send('Gặp lỗi khi tải dữ liệu feedback, vui lòng thử lại');
+    }
+};
 
 let create = async (req, res, next) => {
     let customer_id = req.token.customer_id;
@@ -208,5 +408,7 @@ module.exports = {
     create,
     update,
     detail,
-    list
+    list,
+    predictFeedback,
+    getFeedbacks
 }

@@ -10,6 +10,8 @@ const Feedback = sequelize.define('Feedback', {
 	content: { type: DataTypes.TEXT, defaultValue: "" },
 	user_id: { type: DataTypes.UUID, allowNull: false },
 	product_variant_id: { type: DataTypes.INTEGER, allowNull: false },
+	predict: { type: DataTypes.INTEGER, allowNull: true }  // Thêm trường predict
+
 }, {
 	timestamps: true,
 	createdAt: 'created_at',
