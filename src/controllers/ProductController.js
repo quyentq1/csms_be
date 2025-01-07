@@ -413,16 +413,46 @@ let detailCustomerSide = async (req, res, next) => {
     try {
         let productDetail = await Product.findOne({
             attributes: ['product_id', 'product_name', 'description', 'rating', 'sold', 'feedback_quantity'],
+            include: [
+                {
+                    model: Product_Variant,
+                    attributes: ['quantity', 'colour_id', 'size_id'],
+                    include: [
+                        { model: Colour, attributes: ['colour_name'] },
+                        { model: Size, attributes: ['size_name'] }
+                    ]
+                }
+            ],
             where: { product_id },
-            raw: true
         });
-        return res.send(productDetail);
+
+        if (productDetail) {
+            // Chuyển đổi dữ liệu để bao gồm thông tin về variant và quantity
+            let variantList = productDetail.product_variants.map(variant => ({
+                colour_name: variant.Colour.colour_name,
+                size_name: variant.Size.size_name,
+                quantity: variant.quantity
+            }));
+
+            let result = {
+                product_id: productDetail.product_id,
+                product_name: productDetail.product_name,
+                description: productDetail.description,
+                rating: productDetail.rating,
+                sold: productDetail.sold,
+                feedback_quantity: productDetail.feedback_quantity,
+                variants: variantList
+            };
+
+            return res.send(result);
+        } else {
+            return res.status(400).send('Product not exist');
+        }
     } catch (err) {
         console.log(err);
         return res.status(500).send('Error');
     }
 }
-
 let detailAdminSide = async (req, res, next) => {
     let product_id = req.params.product_id;
     if (product_id === undefined) return res.status(400).send(' product_id not exist');
